@@ -1,10 +1,9 @@
 from fastapi import APIRouter
-from fastapi.params import File
 
 router = APIRouter()
 
 @router.put("/parse")
-async def parse_resume(resume: File):
+async def parse_resume(resume):
     """
         Process resume document and return a dictionary of the parsed data.
 
