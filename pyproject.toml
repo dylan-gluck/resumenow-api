@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.115.8",
+    "google-genai>=1.2.0",
+    "vlmrun-hub>=0.1.30",
 ]
