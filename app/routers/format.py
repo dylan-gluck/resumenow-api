@@ -1,9 +1,11 @@
+import os
 from fastapi import APIRouter
 from google import genai
 from vlmrun.hub.schemas.document.resume import Resume
 
 router = APIRouter()
-client = genai.Client()
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
 
 @router.put("/format")
 async def format_resume(resume: Resume, job_description: str):

@@ -1,10 +1,11 @@
+import os
 from fastapi import APIRouter, UploadFile, File
 from google import genai
 from google.genai import types
 from vlmrun.hub.schemas.document.resume import Resume
 
 router = APIRouter()
-client = genai.Client()
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 
 @router.put("/parse")
