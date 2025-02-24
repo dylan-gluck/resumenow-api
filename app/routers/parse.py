@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from google import genai
 from google.genai import types
 from vlmrun.hub.schemas.document.resume import Resume
@@ -28,7 +28,7 @@ async def parse_resume(file: UploadFile = File(...)):
     elif file.content_type == "text/plain":
         pass
     else:
-        raise ValueError("Unsupported file type")
+        raise HTTPException(status_code=422, detail="Unsupported file type")
 
     content = await file.read()
 

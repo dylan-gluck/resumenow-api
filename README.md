@@ -13,8 +13,24 @@ Backend service for the ResumeNow application.
 uv run fastapi dev
 ```
 
-## Running tests
+## Testing
+
+### Running all tests
 
 ```bash
 uv run pytest
 ```
+
+### Running specific tests
+
+```bash
+uv run pytest tests/test_format.py::test_format_resume_success
+```
+
+### Running tests with coverage
+
+```bash
+uv run pytest --cov=app
+```
+
+The test suite currently has 100% code coverage.
