@@ -1,11 +1,14 @@
 import os
+from io import BytesIO
+from ..logger.logger import logger
+from ..schema.resume import Resume
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from google import genai
-from google.genai import types
-from vlmrun.hub.schemas.document.resume import Resume
+from unstructured.partition.auto import partition
+from openai import OpenAI
+
 
 router = APIRouter()
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
 @router.put("/parse")
@@ -14,39 +17,58 @@ async def parse_resume(file: UploadFile = File(...)):
     Process resume document and return a dictionary of the parsed data.
 
     Args:
-        file: File object (pdf, md, txt)
+        file: File object (pdf, md, doc, docx)
 
     Returns:
         status: HTTPStatus code
         data: JSON dictionary of parsed Resume
     """
+    supported_types = [
+        "application/pdf",
+        "application/doc",
+        "text/markdown",
+        "text/plain",
+    ]
 
-    if file.content_type == "application/pdf":
-        pass
-    elif file.content_type == "text/markdown":
-        pass
-    elif file.content_type == "text/plain":
-        pass
-    else:
+    if not file:
+        logger.error("No file provided")
+        raise HTTPException(status_code=422, detail="No file provided")
+
+    if file.content_type not in supported_types:
+        logger.error("Unsupported file type")
         raise HTTPException(status_code=422, detail="Unsupported file type")
 
+    # Byte stream from UploadFile
     content = await file.read()
+    content_stream = BytesIO(content)
 
-    prompt = "Extract all available resume information"
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        config={
-            "response_mime_type": "application/json",
-            "response_schema": Resume,
-        },
-        contents=[
-            types.Part.from_bytes(
-                data=content,
-                mime_type=file.content_type,
-            ),
-            prompt,
-        ],
-    )
+    # Get text elements using unstructured
+    elements = partition(file=content_stream)
 
-    parsed_data = Resume.model_validate(response.parsed)
-    return {"status": 200, "data": parsed_data}
+    # Extract text from elements for JSON serialization
+    text_elements = [str(element) for element in elements]
+
+    # Stringify elements json for LLM
+    string = "\n".join(text_elements)
+
+    # Format extracted text to Resume schema
+    try:
+        completion = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Extract the Resume information."},
+                {"role": "user", "content": string},
+            ],
+            response_format=Resume,
+        )
+    except Exception as e:
+        logger.error(f"Error calling OpenAI API: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="Error processing resume with OpenAI API"
+        )
+
+    # Validate
+    resume = completion.choices[0].message.parsed
+    parsed_data = Resume.model_validate(resume)
+
+    return {"status": 200, "data": {"resume": parsed_data}}
