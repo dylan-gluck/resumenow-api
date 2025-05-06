@@ -2,7 +2,7 @@ import os
 import httpx
 from ..logger.logger import logger
 from ..schema.job import Job
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Form
 from openai import OpenAI
 
 router = APIRouter()
@@ -28,14 +28,14 @@ async def fetch_html(url: str) -> str:
 
 
 @router.put("/job")
-async def job_info(url: str):
+async def job_info(url: str = Form(...)):
     """
     Fetch html from url using httpx
     Extract Job info from html using OpenAI API
     Return Job info as JSON dictionary
 
     Args:
-        url: String of the job posting
+        url: String of the job posting from form data
 
     Returns:
         status: HTTPStatus code
