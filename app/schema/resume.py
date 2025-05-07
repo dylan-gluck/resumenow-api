@@ -14,23 +14,23 @@ class ContactInfo(BaseModel):
 
 
 class Education(BaseModel):
-    institution: Optional[str]
-    degree: Optional[str]
+    institution: str
+    degree: str
     field_of_study: Optional[str]
     graduation_date: Optional[str]
     gpa: Optional[float]
-    honors: Optional[List[str]]
-    relevant_courses: Optional[List[str]]
+    honors: List[str]
+    relevant_courses: List[str]
 
 
 class WorkExperience(BaseModel):
-    company: Optional[str]
-    position: Optional[str]
+    company: str
+    position: str
     start_date: Optional[str]
     end_date: Optional[str]
-    is_current: bool
+    is_current: Optional[bool]
     responsibilities: List[str]
-    technologies: Optional[List[str]]
+    technologies: List[str]
 
 
 class Skill(BaseModel):
@@ -42,22 +42,22 @@ class Skill(BaseModel):
 class TechnicalSkills(BaseModel):
     programming_languages: List[Skill]
     frameworks_libraries: List[Skill]
-    databases: Optional[List[Skill]]
-    tools: Optional[List[Skill]]
-    cloud_platforms: Optional[List[Skill]]
-    other: Optional[List[Skill]]
+    databases: List[Skill]
+    tools: List[Skill]
+    cloud_platforms: List[Skill]
+    other: List[Skill]
 
 
 class Project(BaseModel):
     name: str
     description: Optional[str]
-    technologies: Optional[List[str]]
+    technologies: List[str]
     url: Optional[str]
     github_url: Optional[str]
     start_date: Optional[str]
     end_date: Optional[str]
     role: Optional[str]
-    key_achievements: Optional[List[str]]
+    key_achievements: List[str]
 
 
 class Certification(BaseModel):
@@ -70,8 +70,8 @@ class Certification(BaseModel):
 
 class OpenSourceContribution(BaseModel):
     project_name: str
-    contribution_type: str
-    description: str
+    contribution_type: Optional[str]
+    description: Optional[str]
     url: Optional[str]
 
 
@@ -81,13 +81,13 @@ class Resume(BaseModel):
     education: List[Education]
     work_experience: List[WorkExperience]
     technical_skills: TechnicalSkills
-    projects: Optional[List[Project]]
-    open_source_contributions: Optional[List[OpenSourceContribution]]
-    certifications: Optional[List[Certification]]
-    publications: Optional[List[str]]
-    conferences: Optional[List[str]]
-    languages: Optional[List[Skill]]
-    volunteer_work: Optional[List[str]]
-    interests: Optional[List[str]]
-    references: Optional[str]
+    projects: List[Project]
+    open_source_contributions: List[OpenSourceContribution]
+    certifications: List[Certification]
+    publications: List[str]
+    conferences: List[str]
+    languages: List[Skill]
+    volunteer_work: List[str]
+    interests: List[str]
+    references: List[str]
     additional_sections: Optional[Dict[str, List[str]]]

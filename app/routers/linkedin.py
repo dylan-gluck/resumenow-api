@@ -1,7 +1,7 @@
 import os
 import httpx
 from ..logger.logger import logger
-from ..schema.job import Job
+from ..schema.resume import Resume
 from fastapi import APIRouter, HTTPException, Form
 from openai import OpenAI
 
@@ -27,19 +27,19 @@ async def fetch_html(url: str) -> str:
         raise HTTPException(status_code=500, detail="Failed to fetch html")
 
 
-@router.put("/job")
-async def job_info(url: str = Form(...)):
+@router.put("/linkedin")
+async def linkedin_resume(url: str = Form(...)):
     """
     Fetch html from url using httpx
-    Extract Job info from html using OpenAI API
-    Return Job info as JSON dictionary
+    Extract Resume info from html using OpenAI API
+    Return Resume info as JSON dictionary
 
     Args:
-        url: String of the job posting from form data
+        url: String of the linkedin profile
 
     Returns:
         status: HTTPStatus code
-        data: JSON dictionary of parsed Job info
+        data: JSON dictionary of parsed Resume info
     """
 
     logger.info(f"Fetching html from {url}")
@@ -52,19 +52,19 @@ async def job_info(url: str = Form(...)):
         completion = client.beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "Extract the Job information."},
+                {"role": "system", "content": "Extract the Resume information."},
                 {"role": "user", "content": html},
             ],
-            response_format=Job,
+            response_format=Resume,
         )
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {str(e)}")
         raise HTTPException(
-            status_code=500, detail="Error processing job with OpenAI API"
+            status_code=500, detail="Error processing resume with OpenAI API"
         )
 
     # Validate
-    job_data = completion.choices[0].message.parsed
-    parsed_data = Job.model_validate(job_data)
+    resume_data = completion.choices[0].message.parsed
+    parsed_data = Resume.model_validate(resume_data)
 
-    return {"status": 200, "data": {"job": parsed_data}}
+    return {"status": 200, "data": {"resume": parsed_data}}
