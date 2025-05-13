@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import parse, format, job, linkedin
+from .routers import parse, optimize, job, linkedin
 
 app = FastAPI()
 
@@ -21,4 +21,4 @@ app.add_middleware(
 app.include_router(parse.router)
 app.include_router(linkedin.router)
 app.include_router(job.router)
-app.include_router(format.router)
+app.include_router(optimize.router)

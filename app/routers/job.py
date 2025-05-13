@@ -1,37 +1,17 @@
-import os
-import httpx
+from ..lib.httpx import fetch
+from ..lib.agent import job_agent
 from ..logger.logger import logger
 from ..schema.job import Job
 from fastapi import APIRouter, HTTPException, Form
-from openai import OpenAI
+from agents import Runner
 
 router = APIRouter()
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-
-async def fetch_html(url: str) -> str:
-    """
-    Fetch html from url using httpx
-
-    Args:
-        url: String of the url to scrape
-
-    Returns:
-        html: String of the html content
-    """
-    try:
-        response = httpx.get(url)
-        return response.text
-    except Exception as e:
-        logger.error(f"Failed to fetch html from {url}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch html")
-
 
 @router.put("/job")
 async def job_info(url: str = Form(...)):
     """
     Fetch html from url using httpx
-    Extract Job info from html using OpenAI API
+    Extract Job info from html using OpenAI Agents SDK
     Return Job info as JSON dictionary
 
     Args:
@@ -42,21 +22,12 @@ async def job_info(url: str = Form(...)):
         data: JSON dictionary of parsed Job info
     """
 
-    logger.info(f"Fetching html from {url}")
-
     # Fetch html from url using httpx
-    html = await fetch_html(url)
+    html = await fetch(url)
 
     # Format extracted text to Job schema
     try:
-        completion = client.beta.chat.completions.parse(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Extract the Job information."},
-                {"role": "user", "content": html},
-            ],
-            response_format=Job,
-        )
+        result = await Runner.run(job_agent, html)
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {str(e)}")
         raise HTTPException(
@@ -64,7 +35,7 @@ async def job_info(url: str = Form(...)):
         )
 
     # Validate
-    job_data = completion.choices[0].message.parsed
+    job_data = result.final_output
     parsed_data = Job.model_validate(job_data)
 
     return {"status": 200, "data": {"job": parsed_data}}

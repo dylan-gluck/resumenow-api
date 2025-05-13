@@ -1,15 +1,12 @@
-import os
 from io import BytesIO
+from ..lib.agent import resume_agent
 from ..logger.logger import logger
 from ..schema.resume import Resume
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from unstructured.partition.auto import partition
-from openai import OpenAI
-
+from agents import Runner
 
 router = APIRouter()
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
 
 @router.put("/parse")
 async def parse_resume(file: UploadFile = File(...)):
@@ -53,14 +50,7 @@ async def parse_resume(file: UploadFile = File(...)):
 
     # Format extracted text to Resume schema
     try:
-        completion = client.beta.chat.completions.parse(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Extract the Resume information."},
-                {"role": "user", "content": string},
-            ],
-            response_format=Resume,
-        )
+        result = await Runner.run(resume_agent, string)
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {str(e)}")
         raise HTTPException(
@@ -68,7 +58,7 @@ async def parse_resume(file: UploadFile = File(...)):
         )
 
     # Validate
-    resume = completion.choices[0].message.parsed
+    resume = result.final_output
     parsed_data = Resume.model_validate(resume)
 
     return {"status": 200, "data": {"resume": parsed_data}}
